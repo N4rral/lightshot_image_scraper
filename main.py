@@ -2,7 +2,7 @@ import random
 import cloudscraper
 import os
 import requests
-
+import time
 
 repeat = True
 amount = 0
@@ -17,6 +17,7 @@ while repeat:
 url_template = "https://prnt.sc/"
 i = 0
 while i < amount:
+    st = time.time()
     i += 1
     scraper = cloudscraper.create_scraper()
     url_scrape = scraper.get(url_template + str(random.randint(0, 999999))).text
@@ -39,9 +40,15 @@ while i < amount:
         else:
             pass
     if url_check == "//st.prntscr.com" or "imageshack" in img_url:
-        amount += 1
+        i -= 1
     else:
-        print(img_url)
+        print(str(i) + ": " + img_url)
         img_data = requests.get(img_url).content
-        with open(os.path.join("images", "f") + str(i) + ".jpg", "wb") as handler:
-            handler.write((img_data))
+        with open(os.path.join("images", str(i) + ".jpg"), "wb") as handler:
+            handler.write(img_data)
+    et = time.time()
+    ft = et - st
+    if i < amount:
+        time.sleep(5-ft)
+    else:
+        print("process finished")
