@@ -1,6 +1,7 @@
 import random
 import cloudscraper
-
+import os
+import requests
 
 
 repeat = True
@@ -41,3 +42,6 @@ while i < amount:
         amount += 1
     else:
         print(img_url)
+        img_data = requests.get(img_url).content
+        with open(os.path.join("images", "f") + str(i) + ".jpg", "wb") as handler:
+            handler.write((img_data))
