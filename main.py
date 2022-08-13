@@ -4,6 +4,7 @@ import os
 import requests
 import time
 from urllib import request
+import configparser
 
 full_repeat = True
 amount = 0
@@ -11,25 +12,57 @@ amount = 0
 while full_repeat:
     repeat = True
     while repeat:
+        # Main menu
         option = input("1 Download new images\n2 Edit settings\n3 Remove old images\n4 End program\nchoice: ")
+        print("")
+        # Download new images
         if option == "1":
             amount_repeat = True
             while amount_repeat:
                 try:
-                    amount = int(input("\nInput the amount of images you want to download: "))
+                    amount = int(input("Input the amount of images you want to download: "))
                     if 0 < amount < 9999:
                         amount_repeat = False
                         repeat = False
+                        amount_default = amount
                     else:
                         print("Input value in range 0-9999")
                         amount_repeat = True
                 except:
                     print("Invalid input")
                     amount_repeat = True
+        # Edit settings
         elif option == "2":
-            print("\nwork in progress\n")
+            settings_repeat = True
+            while settings_repeat:
+                option = input("1 Change cooldown time\n2 Back to main menu\nchoice: ")
+                print("")
+                if option == "1":
+                    print("change cooldown time (Should be 5-10, but you can disable it by typing 0.)")
+                    try:
+                        cooldown_time = int(input("Enter value: "))
+                        if cooldown_time > 0:
+                            print("")
+                            print("Value saved successfully.")
+                        else:
+                            print("")
+                            print("Invalid input. cooldown time has been set to default value.")
+                            cooldown_time = 5
+                        settings_repeat = False
+                    except:
+                        print("")
+                        print("Invalid input. cooldown time has been set to default value.")
+                        cooldown_time = 5
+                    print("")
+                elif option == "2":
+                    settings_repeat = False
+                else:
+                    print("Invalid value\n")
+                    settings_repeat = True
+        # Remove old images
         elif option == "3":
-            print("\nwork in progress\n")
+            print("work in progress\n")
+        # Terminate program
         elif option == "4":
             exit()
         else:
@@ -98,12 +131,12 @@ while full_repeat:
                         print("Process finished\n")
                         end_repeat = True
                         while end_repeat:
-                            end_choice = input("1 Generate another " + str(amount) + " images"
+                            end_choice = input("1 Generate another " + str(amount_default) + " images"
                                                "\n2 Restart the program\n3 End the program\nchoice: ")
                             if end_choice == "1":
                                 partial_repeat = True
                                 end_repeat = False
-                                amount += amount
+                                amount += amount_default
                             elif end_choice == "2":
                                 partial_repeat = False
                                 full_repeat = True
