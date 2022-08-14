@@ -8,8 +8,38 @@ import configparser
 
 full_repeat = True
 amount = 0
-# User inputs
+# Create config file if it doesn't exist already and assign default settings
+config = configparser.ConfigParser()
+try:
+    config.add_section("settings")
+    with open("settings.ini", "w") as file:
+        config.write(file)
+        file.flush()
+        os.fsync(file.fileno())
+except configparser.DuplicateSectionError:
+    pass
+try:
+    config.add_section("default")
+    config.set("default", "cooldown_time", str(5))
+    with open("settings.ini", "w") as file:
+        config.write(file)
+        file.flush()
+        os.fsync(file.fileno())
+except configparser.DuplicateSectionError:
+    pass
+file.close()
 while full_repeat:
+    # Get config data and assign them to variables
+    config.read(open("settings.ini", "r"))
+    keys = ["cooldown_time"]
+    settings_dictionary = {}
+    for key in keys:
+        try:
+            settings_dictionary[key] = config.get("settings", key)
+        except configparser.NoOptionError:
+            settings_dictionary[key] = config.get("default", key)
+    cooldown_time = int(settings_dictionary["cooldown_time"])
+    # User inputs
     repeat = True
     while repeat:
         # Main menu
@@ -40,8 +70,14 @@ while full_repeat:
                 if option == "1":
                     print("change cooldown time (Should be 5-10, but you can disable it by typing 0.)")
                     try:
+                        print("cooldown_time = " + str(config.get("settings", "cooldown_time")))
+                    except configparser.NoOptionError:
+                        print("cooldown_time = " + str(config.get("default", "cooldown_time")))
+                    try:
                         cooldown_time = int(input("Enter value: "))
-                        if cooldown_time > 0:
+                        if cooldown_time >= 0:
+                            config.set("settings", "cooldown_time", str(cooldown_time))
+                            config.write(open("settings.ini", "w"))
                             print("")
                             print("Value saved successfully.")
                         else:
@@ -123,10 +159,10 @@ while full_repeat:
                     # Get process runtime and set time.sleep() for the process to be 5 s or longer if necessary
                     ft = et - st
                     if i < amount:
-                        if ft >= 5:
+                        if ft >= cooldown_time or cooldown_time == 0:
                             time.sleep(0)
                         else:
-                            time.sleep(5 - ft)
+                            time.sleep(cooldown_time - ft)
                     else:
                         print("Process finished\n")
                         end_repeat = True
