@@ -8,6 +8,10 @@ import configparser
 
 full_repeat = True
 amount = 0
+try:
+    os.mkdir("images")
+except FileExistsError:
+    pass
 # Create config file if it doesn't exist already and assign default settings
 config = configparser.ConfigParser()
 try:
