@@ -4,7 +4,6 @@ import os
 import requests
 import time
 from urllib import request
-import configparser
 
 full_repeat = True
 amount = 0
@@ -12,37 +11,7 @@ try:
     os.mkdir("images")
 except FileExistsError:
     pass
-# Create config file if it doesn't exist already and assign default settings
-config = configparser.ConfigParser()
-try:
-    config.add_section("settings")
-    with open("settings.ini", "w") as file:
-        config.write(file)
-        file.flush()
-        os.fsync(file.fileno())
-except configparser.DuplicateSectionError:
-    pass
-try:
-    config.add_section("default")
-    config.set("default", "cooldown_time", str(5))
-    with open("settings.ini", "w") as file:
-        config.write(file)
-        file.flush()
-        os.fsync(file.fileno())
-except configparser.DuplicateSectionError:
-    pass
-file.close()
 while full_repeat:
-    # Get config data and assign them to variables
-    config.read(open("settings.ini", "r"))
-    keys = ["cooldown_time"]
-    settings_dictionary = {}
-    for key in keys:
-        try:
-            settings_dictionary[key] = config.get("settings", key)
-        except configparser.NoOptionError:
-            settings_dictionary[key] = config.get("default", key)
-    cooldown_time = int(settings_dictionary["cooldown_time"])
     # User inputs
     repeat = True
     while repeat:
@@ -62,46 +31,33 @@ while full_repeat:
                     else:
                         print("Input value in range 0-9999")
                         amount_repeat = True
-                except:
+                except ValueError:
                     print("Invalid input")
                     amount_repeat = True
         # Edit settings
         elif option == "2":
             settings_repeat = True
             while settings_repeat:
-                option = input("1 Change cooldown time\n2 Back to main menu\nchoice: ")
+                option = input("1 Change cooldown time\n2 Open images folder after downloading is done"
+                               "\n3 Back to main menu\nchoice: ")
                 print("")
                 if option == "1":
-                    print("change cooldown time (Should be 5-10, but you can disable it by typing 0.)")
-                    try:
-                        print("cooldown_time = " + str(config.get("settings", "cooldown_time")))
-                    except configparser.NoOptionError:
-                        print("cooldown_time = " + str(config.get("default", "cooldown_time")))
-                    try:
-                        cooldown_time = int(input("Enter value: "))
-                        if cooldown_time >= 0:
-                            config.set("settings", "cooldown_time", str(cooldown_time))
-                            config.write(open("settings.ini", "w"))
-                            print("")
-                            print("Value saved successfully.")
-                        else:
-                            print("")
-                            print("Invalid input. cooldown time has been set to default value.")
-                            cooldown_time = 5
-                        settings_repeat = False
-                    except:
-                        print("")
-                        print("Invalid input. cooldown time has been set to default value.")
-                        cooldown_time = 5
-                    print("")
+                    print("Work in progress.")
                 elif option == "2":
+                    print("Work in progress.")
+                elif option == "3":
                     settings_repeat = False
                 else:
                     print("Invalid value\n")
                     settings_repeat = True
         # Remove old images
         elif option == "3":
-            print("work in progress\n")
+            try:
+                for path in os.listdir("images"):
+                    os.remove("images/" + path)
+                print("Previously downloaded files have been cleared successfully.\n")
+            except FileNotFoundError:
+                print("There are no files to be deleted.\n")
         # Terminate program
         elif option == "4":
             exit()
@@ -163,12 +119,13 @@ while full_repeat:
                     # Get process runtime and set time.sleep() for the process to be 5 s or longer if necessary
                     ft = et - st
                     if i < amount:
-                        if ft >= cooldown_time or cooldown_time == 0:
+                        if ft >= 5:
                             time.sleep(0)
                         else:
-                            time.sleep(cooldown_time - ft)
+                            time.sleep(5 - ft)
                     else:
                         print("Process finished\n")
+                        os.startfile("images")
                         end_repeat = True
                         while end_repeat:
                             end_choice = input("1 Generate another " + str(amount_default) + " images"
