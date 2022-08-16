@@ -4,17 +4,43 @@ import os
 import requests
 import time
 from urllib import request
+import json
+from types import SimpleNamespace
 
 full_repeat = True
 amount = 0
+default_cfg = {
+    "cooldown_time": 5,
+    "open_folder_end": "True"
+}
+cfg = {}
 try:
     os.mkdir("images")
+except FileExistsError:
+    pass
+# Create settings.json if it doesn't exist and assign default values provided by default_cfg
+try:
+    cfg_file = open("settings.json", "x")
+    cfg_file.flush()
+    os.fsync(cfg_file.fileno())
+    cfg_file.close()
+    cfg_file = open("settings.json", "w")
+    json.dump(default_cfg, cfg_file)
+    cfg_file.close()
 except FileExistsError:
     pass
 while full_repeat:
     # User inputs
     repeat = True
     while repeat:
+        cfg_file = open("settings.json", "r")
+        cfg = json.load(cfg_file)
+        n = SimpleNamespace(**cfg)
+        # Assign values to variables using namespace
+        cooldown_time = n.cooldown_time
+        open_folder_end = n.open_folder_end
+        # Close the cfg_file
+        cfg_file.close()
         # Main menu
         option = input("1 Download new images\n2 Edit settings\n3 Remove old images\n4 End program\nchoice: ")
         print("")
@@ -39,14 +65,56 @@ while full_repeat:
             settings_repeat = True
             while settings_repeat:
                 option = input("1 Change cooldown time\n2 Open images folder after downloading is done"
-                               "\n3 Back to main menu\nchoice: ")
+                               "\n3 Restore to default settings\n4 Back to main menu\nchoice: ")
                 print("")
+                # Cooldown_time
                 if option == "1":
-                    print("Work in progress.")
+                    print("Should be 5 - 10 seconds, but can be turned off by using 0.")
+                    with open("settings.json", "r") as cfg_file:
+                        cfg = json.load(cfg_file)
+                    print("cooldown_time = " + str(cfg["cooldown_time"]))
+                    try:
+                        cfg["cooldown_time"] = int(input("Input value: "))
+                        if 0 <= cfg["cooldown_time"] <= 10000:
+                            with open("settings.json", "w") as cfg_file:
+                                json.dump(cfg, cfg_file)
+                            print("\nChanges were saved successfully.")
+                        else:
+                            print("\nInvalid input. Choose a value between 0-10000 No changes were made.")
+                    except ValueError:
+                        print("\nInvalid input. No changes were made.")
+                    print("")
+                # Open_folder_end
                 elif option == "2":
-                    print("Work in progress.")
+                    template_true = "True"
+                    template_false = "False"
+                    print("Choose whether you want to open images folder after downloading is done.")
+                    with open("settings.json", "r") as cfg_file:
+                        cfg = json.load(cfg_file)
+                    print("open_folder_end = " + cfg["open_folder_end"])
+                    cfg["open_folder_end"] = input("Input value: ")
+                    if not cfg["open_folder_end"].isdigit():
+                        if cfg["open_folder_end"].lower() == template_true.lower():
+                            cfg["open_folder_end"] = "True"
+                        elif cfg["open_folder_end"].lower() == template_false.lower():
+                            cfg["open_folder_end"] = "False"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                        print("\nChanges were saved successfully.")
+                    else:
+                        print("\nInvalid input. Enter True or False.")
+                    print("")
+                # Return to defaults
                 elif option == "3":
+                    with open("settings.json", "w") as cfg_file:
+                        json.dump(default_cfg, cfg_file)
+                    print("Settings were restored to default values.\n")
+                # Go back to main menu
+                elif option == "4":
                     settings_repeat = False
+                # Invalid input
                 else:
                     print("Invalid value\n")
                     settings_repeat = True
@@ -119,13 +187,16 @@ while full_repeat:
                     # Get process runtime and set time.sleep() for the process to be 5 s or longer if necessary
                     ft = et - st
                     if i < amount:
-                        if ft >= 5:
+                        if ft >= cooldown_time or cooldown_time == 0:
                             time.sleep(0)
                         else:
-                            time.sleep(5 - ft)
+                            time.sleep(cooldown_time - ft)
                     else:
                         print("Process finished\n")
-                        os.startfile("images")
+                        if open_folder_end == "True":
+                            os.startfile("images")
+                        else:
+                            pass
                         end_repeat = True
                         while end_repeat:
                             end_choice = input("1 Generate another " + str(amount_default) + " images"
