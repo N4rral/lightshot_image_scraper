@@ -100,8 +100,6 @@ while full_repeat:
                             cfg["open_folder_end"] = "False"
                         with open("settings.json", "w") as cfg_file:
                             json.dump(cfg, cfg_file)
-                        with open("settings.json", "w") as cfg_file:
-                            json.dump(cfg, cfg_file)
                         print("\nChanges were saved successfully.")
                     else:
                         print("\nInvalid input. Enter True or False.")
