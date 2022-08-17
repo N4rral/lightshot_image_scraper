@@ -1,4 +1,5 @@
 import random
+import subprocess
 import cloudscraper
 import os
 import requests
@@ -6,12 +7,14 @@ import time
 from urllib import request
 import json
 from types import SimpleNamespace
+from subprocess import call
 
 full_repeat = True
 amount = 0
 default_cfg = {
     "cooldown_time": 5,
-    "open_folder_end": "True"
+    "open_folder_end": "True",
+    "images_folder_location": "images"
 }
 cfg = {}
 try:
@@ -62,10 +65,14 @@ while full_repeat:
                     amount_repeat = True
         # Edit settings
         elif option == "2":
+            with open("settings.json", "r") as cfg_file:
+                cfg = json.load(cfg_file)
             settings_repeat = True
             while settings_repeat:
-                option = input("1 Change cooldown time\n2 Open images folder after downloading is done"
-                               "\n3 Restore to default settings\n4 Back to main menu\nchoice: ")
+                option = input("1 Change cooldown time = " + str(cfg["cooldown_time"]) +
+                               "\n2 Open images folder after downloading is done = " + str(cfg["open_folder_end"]) +
+                               "\n3 Set a new directory for the images"
+                               "\n4 Restore to default settings\n5 Back to main menu\nchoice: ")
                 print("")
                 # Cooldown_time
                 if option == "1":
@@ -86,31 +93,51 @@ while full_repeat:
                     print("")
                 # Open_folder_end
                 elif option == "2":
-                    template_true = "True"
-                    template_false = "False"
                     print("Choose whether you want to open images folder after downloading is done.")
                     with open("settings.json", "r") as cfg_file:
                         cfg = json.load(cfg_file)
                     print("open_folder_end = " + cfg["open_folder_end"])
                     cfg["open_folder_end"] = input("Input value: ")
                     if not cfg["open_folder_end"].isdigit():
-                        if cfg["open_folder_end"].lower() == template_true.lower():
+                        if cfg["open_folder_end"].lower() == "true":
                             cfg["open_folder_end"] = "True"
-                        elif cfg["open_folder_end"].lower() == template_false.lower():
+                        elif cfg["open_folder_end"].lower() == "false":
                             cfg["open_folder_end"] = "False"
-                        with open("settings.json", "w") as cfg_file:
-                            json.dump(cfg, cfg_file)
-                        print("\nChanges were saved successfully.")
+                        else:
+                            pass
+                        if cfg["open_folder_end"] == "True" or cfg["open_folder_end"] == "False":
+                            with open("settings.json", "w") as cfg_file:
+                                json.dump(cfg, cfg_file)
+                            print("\nChanges were saved successfully.")
+                        else:
+                            print("\nInvalid input. Enter True or False.")
                     else:
                         print("\nInvalid input. Enter True or False.")
                     print("")
-                # Return to defaults
+                # Choose a new directory for the images to be downloaded to
                 elif option == "3":
+                    with open("settings.json", "r") as cfg_file:
+                        cfg = json.load(cfg_file)
+                    print("Choose a directory where you want to create a new folder.")
+                    # try:
+                    #     call(["python", "folder.py"])
+                    #     with open("variables.json", "r") as variables:
+                    #         cfg["images_folder_location"] = variables.read()
+                    #     os.remove("variables.json")
+                    # except FileNotFoundError:
+                    subprocess.run(r"exec\folder.exe")
+                    with open(r"variables.json", "r") as variables:
+                        cfg["images_folder_location"] = variables.read()
+                    os.remove(r"variables.json")
+                    with open("settings.json", "w") as cfg_file:
+                        json.dump(cfg, cfg_file)
+                # Return to defaults
+                elif option == "4":
                     with open("settings.json", "w") as cfg_file:
                         json.dump(default_cfg, cfg_file)
                     print("Settings were restored to default values.\n")
                 # Go back to main menu
-                elif option == "4":
+                elif option == "5":
                     settings_repeat = False
                 # Invalid input
                 else:
