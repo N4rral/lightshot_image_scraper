@@ -1,5 +1,4 @@
 import random
-import subprocess
 import cloudscraper
 import os
 import requests
@@ -128,18 +127,24 @@ while full_repeat:
                         with open("settings.json", "r") as cfg_file:
                             cfg = json.load(cfg_file)
                         print("Choose a directory where you want to create a new folder.")
-                        try:
-                            call(["python", "folder.py"])
-                            with open("variables.json", "r") as variables:
-                                cfg["images_folder_location"] = variables.read() + "/images"
-                            os.remove("variables.json")
-                        except FileNotFoundError:
-                            subprocess.run(r"exec\folder.exe")
-                            with open(r"variables.json", "r") as variables:
-                                cfg["images_folder_location"] = variables.read()
-                            os.remove(r"variables.json")
+                        call(["python", "folder.py"])
+                        with open("variables.json", "r") as variables:
+                            cfg["images_folder_location"] = variables.read() + "/images"
+                        os.remove("variables.json")
                         with open("settings.json", "w") as cfg_file:
                             json.dump(cfg, cfg_file)
+                        with open("settings.json", "r") as cfg_file:
+                            cfg = json.load(cfg_file)
+                            try:
+                                os.mkdir(cfg["images_folder_location"])
+                            except FileExistsError:
+                                pass
+                            else:
+                                try:
+                                    os.mkdir("images")
+                                except FileExistsError:
+                                    pass
+                        print("\nFolder has been set to your desired location.")
                     elif option == "2":
                         with open("settings.json", "r") as cfg_file:
                             cfg = json.load(cfg_file)
@@ -151,11 +156,11 @@ while full_repeat:
                                 except FileNotFoundError:
                                     pass
                                 cfg["images_folder_location"] = default_cfg["images_folder_location"]
-                                with open("settings.json", "w") as cfg_file:
-                                    json.dump(cfg, cfg_file)
                                 print("\nYour folder has been successfully removed along with all the images.")
                             else:
                                 print("\nFolder is set to default. Deleting that folder is not permitted.")
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
                     else:
                         print("\nInvalid input. Choose option.")
                     print("")
