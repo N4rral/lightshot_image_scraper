@@ -17,10 +17,6 @@ default_cfg = {
     "images_folder_location": "images"
 }
 cfg = {}
-try:
-    os.mkdir("images")
-except FileExistsError:
-    pass
 # Create settings.json if it doesn't exist and assign default values provided by default_cfg
 try:
     cfg_file = open("settings.json", "x")
@@ -42,6 +38,17 @@ while full_repeat:
         # Assign values to variables using namespace
         cooldown_time = n.cooldown_time
         open_folder_end = n.open_folder_end
+        images_folder_location = n.images_folder_location
+        if images_folder_location != "images":
+            try:
+                os.mkdir(images_folder_location)
+            except FileExistsError:
+                pass
+        else:
+            try:
+                os.mkdir("images")
+            except FileExistsError:
+                pass
         # Close the cfg_file
         cfg_file.close()
         # Main menu
@@ -116,21 +123,42 @@ while full_repeat:
                     print("")
                 # Choose a new directory for the images to be downloaded to
                 elif option == "3":
-                    with open("settings.json", "r") as cfg_file:
-                        cfg = json.load(cfg_file)
-                    print("Choose a directory where you want to create a new folder.")
-                    # try:
-                    #     call(["python", "folder.py"])
-                    #     with open("variables.json", "r") as variables:
-                    #         cfg["images_folder_location"] = variables.read()
-                    #     os.remove("variables.json")
-                    # except FileNotFoundError:
-                    subprocess.run(r"exec\folder.exe")
-                    with open(r"variables.json", "r") as variables:
-                        cfg["images_folder_location"] = variables.read()
-                    os.remove(r"variables.json")
-                    with open("settings.json", "w") as cfg_file:
-                        json.dump(cfg, cfg_file)
+                    option = input("1 Choose a new path\n2 Set default and remove custom along with images\nchoice: ")
+                    if option == "1":
+                        with open("settings.json", "r") as cfg_file:
+                            cfg = json.load(cfg_file)
+                        print("Choose a directory where you want to create a new folder.")
+                        try:
+                            call(["python", "folder.py"])
+                            with open("variables.json", "r") as variables:
+                                cfg["images_folder_location"] = variables.read() + "/images"
+                            os.remove("variables.json")
+                        except FileNotFoundError:
+                            subprocess.run(r"exec\folder.exe")
+                            with open(r"variables.json", "r") as variables:
+                                cfg["images_folder_location"] = variables.read()
+                            os.remove(r"variables.json")
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                    elif option == "2":
+                        with open("settings.json", "r") as cfg_file:
+                            cfg = json.load(cfg_file)
+                            if cfg["images_folder_location"] != "images":
+                                try:
+                                    for path in os.listdir(images_folder_location + "/"):
+                                        os.remove(images_folder_location + "/" + path)
+                                    os.rmdir(cfg["images_folder_location"])
+                                except FileNotFoundError:
+                                    pass
+                                cfg["images_folder_location"] = default_cfg["images_folder_location"]
+                                with open("settings.json", "w") as cfg_file:
+                                    json.dump(cfg, cfg_file)
+                                print("\nYour folder has been successfully removed along with all the images.")
+                            else:
+                                print("\nFolder is set to default. Deleting that folder is not permitted.")
+                    else:
+                        print("\nInvalid input. Choose option.")
+                    print("")
                 # Return to defaults
                 elif option == "4":
                     with open("settings.json", "w") as cfg_file:
@@ -146,8 +174,8 @@ while full_repeat:
         # Remove old images
         elif option == "3":
             try:
-                for path in os.listdir("images"):
-                    os.remove("images/" + path)
+                for path in os.listdir(images_folder_location + "/"):
+                    os.remove(images_folder_location + "/" + path)
                 print("Previously downloaded files have been cleared successfully.\n")
             except FileNotFoundError:
                 print("There are no files to be deleted.\n")
@@ -206,7 +234,7 @@ while full_repeat:
                         print(str(i) + ":" + img_url)
                     # Saving image from the url
                     img_data = requests.get(img_url).content
-                    with open(os.path.join("images", str(i) + ".jpg"), "wb") as handler:
+                    with open(os.path.join(images_folder_location, str(i) + ".jpg"), "wb") as handler:
                         handler.write(img_data)
                     et = time.time()
                     # Get process runtime and set time.sleep() for the process to be 5 s or longer if necessary
@@ -219,7 +247,7 @@ while full_repeat:
                     else:
                         print("Process finished\n")
                         if open_folder_end == "True":
-                            os.startfile("images")
+                            os.startfile(images_folder_location)
                         else:
                             pass
                         end_repeat = True
