@@ -7,13 +7,15 @@ from urllib import request
 import json
 from types import SimpleNamespace
 from subprocess import call
+import shutil
 
 full_repeat = True
 amount = 0
 default_cfg = {
     "cooldown_time": 5,
     "open_folder_end": "True",
-    "images_folder_location": "images"
+    "images_folder_location": "images",
+    "image_management_mode": "replace"
 }
 cfg = {}
 # Create settings.json if it doesn't exist and assign default values provided by default_cfg
@@ -38,6 +40,7 @@ while full_repeat:
         cooldown_time = n.cooldown_time
         open_folder_end = n.open_folder_end
         images_folder_location = n.images_folder_location
+        image_management_mode = n.image_management_mode
         if images_folder_location != "images":
             try:
                 os.mkdir(images_folder_location)
@@ -77,8 +80,10 @@ while full_repeat:
             while settings_repeat:
                 option = input("1 Change cooldown time = " + str(cfg["cooldown_time"]) +
                                "\n2 Open images folder after downloading is done = " + str(cfg["open_folder_end"]) +
-                               "\n3 Set a new directory for the images"
-                               "\n4 Restore to default settings\n5 Back to main menu\nchoice: ")
+                               "\n3 Set a new directory for the images which is currently: "
+                               + str(cfg["images_folder_location"]) +
+                               "\n4 Image management mode = " + str(cfg["image_management_mode"]) +
+                               "\n5 Restore to default settings\n6 Back to main menu\nchoice: ")
                 print("")
                 # Cooldown_time
                 if option == "1":
@@ -103,26 +108,24 @@ while full_repeat:
                     with open("settings.json", "r") as cfg_file:
                         cfg = json.load(cfg_file)
                     print("open_folder_end = " + cfg["open_folder_end"])
-                    cfg["open_folder_end"] = input("Input value: ")
-                    if not cfg["open_folder_end"].isdigit():
-                        if cfg["open_folder_end"].lower() == "true":
-                            cfg["open_folder_end"] = "True"
-                        elif cfg["open_folder_end"].lower() == "false":
-                            cfg["open_folder_end"] = "False"
-                        else:
-                            pass
-                        if cfg["open_folder_end"] == "True" or cfg["open_folder_end"] == "False":
-                            with open("settings.json", "w") as cfg_file:
-                                json.dump(cfg, cfg_file)
-                            print("\nChanges were saved successfully.")
-                        else:
-                            print("\nInvalid input. Enter True or False.")
+                    choice = input("1 True\n2 False\nChoice: ")
+                    if choice == "1":
+                        cfg["open_folder_end"] = "True"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                    if choice == "2":
+                        cfg["open_folder_end"] = "False"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
                     else:
-                        print("\nInvalid input. Enter True or False.")
+                        print("\nInvalid input. No changes were made.")
                     print("")
                 # Choose a new directory for the images to be downloaded to
                 elif option == "3":
-                    option = input("1 Choose a new path\n2 Set default and remove custom along with images\nchoice: ")
+                    option = input("1 Choose a new path\n2 Set default remove folder and delete images"
+                                   "\n3 Set default remove folder and migrate images"
+                                   " (replaces images in default folder if names are duplicate)"
+                                   "\n4 Back to settings\nchoice: ")
                     if option == "1":
                         with open("settings.json", "r") as cfg_file:
                             cfg = json.load(cfg_file)
@@ -161,16 +164,59 @@ while full_repeat:
                                 print("\nFolder is set to default. Deleting that folder is not permitted.")
                         with open("settings.json", "w") as cfg_file:
                             json.dump(cfg, cfg_file)
+                    elif option == "3":
+                        with open("settings.json", "r") as cfg_file:
+                            cfg = json.load(cfg_file)
+                            if cfg["images_folder_location"] != "images":
+                                try:
+                                    for path in os.listdir(images_folder_location + "/"):
+                                        try:
+                                            shutil.move(images_folder_location + "/" + path, "images")
+                                        except shutil.Error:
+                                            os.replace(images_folder_location + "/" + path, "images/" + path)
+                                    os.rmdir(cfg["images_folder_location"])
+                                except FileNotFoundError:
+                                    pass
+                                cfg["images_folder_location"] = default_cfg["images_folder_location"]
+                                print("\nYour folder has been successfully removed along with all the images.")
+                            else:
+                                print("\nFolder is set to default. Deleting that folder is not permitted.")
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                    elif option == "4":
+                        pass
                     else:
                         print("\nInvalid input. Choose option.")
                     print("")
-                # Return to defaults
                 elif option == "4":
+                    with open("settings.json", "r") as cfg_file:
+                        cfg = json.load(cfg_file)
+                    print("image_management_mode = " + cfg["image_management_mode"])
+                    choice = input("1 Replace (replaces old images when new are being downloaded)"
+                                   "\n2 Append (old images will be kept when downloading new ones)"
+                                   "\n3 Back to settings \nchoice:")
+                    if choice == "1":
+                        cfg["image_management_mode"] = "replace"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                        print("\nChanges were saved successfully.")
+                    elif choice == "2":
+                        cfg["image_management_mode"] = "append"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                        print("\nChanges were saved successfully.")
+                    elif choice == "3":
+                        pass
+                    else:
+                        print("\nInvalid input.")
+                    print("")
+                # Return to defaults
+                elif option == "5":
                     with open("settings.json", "w") as cfg_file:
                         json.dump(default_cfg, cfg_file)
                     print("Settings were restored to default values.\n")
                 # Go back to main menu
-                elif option == "5":
+                elif option == "6":
                     settings_repeat = False
                 # Invalid input
                 else:
@@ -190,15 +236,21 @@ while full_repeat:
         else:
             print("\nInvalid value\n")
             repeat = True
-
     url_template = "https://prnt.sc/"
     i = 0
+    alt_i = 0
+    if image_management_mode == "replace":
+        pass
+    else:
+        for path in os.listdir(images_folder_location + "/"):
+            alt_i += 1
     partial_repeat = True
     # Generate basic urls that will later be used to get images from
     while partial_repeat:
         while i < amount:
             st = time.time()
             i += 1
+            alt_i += 1
             scraper = cloudscraper.create_scraper()
             url_scrape = scraper.get(url_template + str(random.randint(0, 999999))).text
             img_url = ""
@@ -217,6 +269,7 @@ while full_repeat:
             if "//st.prntscr.com" in img_url or "imageshack" in img_url\
                     or "//image.prntscr.com" in img_url:
                 i -= 1
+                alt_i -= 1
             else:
                 # Check if the url is i.imgur.com and get a redirection url in case the image has been removed
                 if "https://i.imgur.com" in img_url:
@@ -227,22 +280,23 @@ while full_repeat:
                 # Check if the image has been removed and issue a replacement url if it has been removed
                 if new_url == "https://i.imgur.com/removed.png":
                     i -= 1
+                    alt_i -= 1
                 else:
                     # So the printed urls are in a column
                     if i < 10:
-                        print(str(i) + ":   " + img_url)
-                    elif 10 <= i < 100:
-                        print(str(i) + ":  " + img_url)
-                    elif 100 <= i < 1000:
-                        print(str(i) + ": " + img_url)
+                        print(str(alt_i) + ":   " + img_url)
+                    elif 10 <= alt_i < 100:
+                        print(str(alt_i) + ":  " + img_url)
+                    elif 100 <= alt_i < 1000:
+                        print(str(alt_i) + ": " + img_url)
                     else:
-                        print(str(i) + ":" + img_url)
+                        print(str(alt_i) + ":" + img_url)
                     # Saving image from the url
                     img_data = requests.get(img_url).content
-                    with open(os.path.join(images_folder_location, str(i) + ".jpg"), "wb") as handler:
+                    with open(os.path.join(images_folder_location, str(alt_i) + ".jpg"), "wb") as handler:
                         handler.write(img_data)
                     et = time.time()
-                    # Get process runtime and set time.sleep() for the process to be 5 s or longer if necessary
+                    # Get process runtime and set time.sleep() for the process to be 5sec or longer if necessary
                     ft = et - st
                     if i < amount:
                         if ft >= cooldown_time or cooldown_time == 0:
