@@ -8,6 +8,7 @@ import json
 from types import SimpleNamespace
 from subprocess import call
 import shutil
+import subprocess
 
 full_repeat = True
 amount = 0
@@ -130,7 +131,7 @@ while full_repeat:
                         with open("settings.json", "r") as cfg_file:
                             cfg = json.load(cfg_file)
                         print("Choose a directory where you want to create a new folder.")
-                        call(["python", "folder.py"])
+                        s = subprocess.check_output(r"subprocess\folder.exe", shell=True)
                         with open("variables.json", "r") as variables:
                             cfg["images_folder_location"] = variables.read() + "/images"
                         os.remove("variables.json")
