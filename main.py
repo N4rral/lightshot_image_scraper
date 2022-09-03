@@ -311,7 +311,7 @@ while full_repeat:
                         handler.write(img_data)
                     if nsfw_filter == "True":
                         # NSFW content detection
-                        model = predict.load_model("venv/model/nsfw_mobilenet2.224x224.h5")
+                        model = predict.load_model("model/nsfw_mobilenet2.224x224.h5")
                         keys = ["drawings", "neutral", "porn", "hentai", "sexy"]
                         var = predict.classify(model, images_folder_location + "/" + str(alt_i) + ".jpg")
                         nsfw_dict = {}
