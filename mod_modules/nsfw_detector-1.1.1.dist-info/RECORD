@@ -1,0 +1,13 @@
+../../Scripts/nsfw-predict.exe,sha256=9NV97tkWEicxf7yxapdmYOwiA5dEDuK_sVfLKR1gCFU,106388
+nsfw_detector-1.1.1.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+nsfw_detector-1.1.1.dist-info/LICENSE.md,sha256=CZ1kjncjO2zju7aDyTIi3mj7sYuQRKUCOMi4Ltk5euA,1243
+nsfw_detector-1.1.1.dist-info/METADATA,sha256=1cEYKBJL39YCLAHAHsQMj-XyipuPTq3TukV0q4GXNOE,8535
+nsfw_detector-1.1.1.dist-info/RECORD,,
+nsfw_detector-1.1.1.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+nsfw_detector-1.1.1.dist-info/WHEEL,sha256=kGT74LWyRUZrL4VgLh6_g12IeVl_9u9ZVhadrgXZUEY,110
+nsfw_detector-1.1.1.dist-info/entry_points.txt,sha256=-95xMh2Eu1KlnUR7iscw7NYhEeVqGLIWXgfAywYepTw,79
+nsfw_detector-1.1.1.dist-info/top_level.txt,sha256=SOBk-uD3o4Ue2f-KcCSyt22U2wU5Q4DUpYxnJQ4hWRE,14
+nsfw_detector/__init__.py,sha256=lxaCG44e910AZWOvCbJ9S16FM39AoW6a8kBVpB8FNuo,31
+nsfw_detector/__pycache__/__init__.cpython-310.pyc,,
+nsfw_detector/__pycache__/predict.cpython-310.pyc,,
+nsfw_detector/predict.py,sha256=n6d-6bAkXAX2x8yrqqP-fxzYkamCbzQhTtn05dcujhs,4254

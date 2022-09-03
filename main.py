@@ -10,6 +10,8 @@ from subprocess import call
 import shutil
 from silence_tensorflow import silence_tensorflow
 silence_tensorflow()
+import sys
+sys.path.append("mod_modules")
 from nsfw_detector import predict
 
 full_repeat = True
