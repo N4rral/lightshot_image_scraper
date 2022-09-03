@@ -8,6 +8,9 @@ import json
 from types import SimpleNamespace
 from subprocess import call
 import shutil
+from silence_tensorflow import silence_tensorflow
+silence_tensorflow()
+from nsfw_detector import predict
 
 full_repeat = True
 amount = 0
@@ -15,7 +18,8 @@ default_cfg = {
     "cooldown_time": 5,
     "open_folder_end": "True",
     "images_folder_location": "images",
-    "image_management_mode": "replace"
+    "image_management_mode": "replace",
+    "nsfw_filter": "True"
 }
 cfg = {}
 # Create settings.json if it doesn't exist and assign default values provided by default_cfg
@@ -41,6 +45,7 @@ while full_repeat:
         open_folder_end = n.open_folder_end
         images_folder_location = n.images_folder_location
         image_management_mode = n.image_management_mode
+        nsfw_filter = n.nsfw_filter
         if images_folder_location != "images":
             try:
                 os.mkdir(images_folder_location)
@@ -78,12 +83,13 @@ while full_repeat:
                 cfg = json.load(cfg_file)
             settings_repeat = True
             while settings_repeat:
-                option = input("1 Change cooldown time = " + str(cfg["cooldown_time"]) +
+                option = input("1 Cooldown time = " + str(cfg["cooldown_time"]) +
                                "\n2 Open images folder after downloading is done = " + str(cfg["open_folder_end"]) +
                                "\n3 Set a new directory for the images which is currently: "
                                + str(cfg["images_folder_location"]) +
                                "\n4 Image management mode = " + str(cfg["image_management_mode"]) +
-                               "\n5 Restore to default settings\n6 Back to main menu\nchoice: ")
+                               "\n5 Nsfw filter = " + str(cfg["nsfw_filter"]) +
+                               "\n6 Restore to default settings\n7 Back to main menu\nchoice: ")
                 print("")
                 # Cooldown_time
                 if option == "1":
@@ -210,13 +216,30 @@ while full_repeat:
                     else:
                         print("\nInvalid input.")
                     print("")
-                # Return to defaults
                 elif option == "5":
+                    print("Choose whether you want the images filtered for nsfw content.")
+                    with open("settings.json", "r") as cfg_file:
+                        cfg = json.load(cfg_file)
+                    print("Nsfw filter = " + cfg["nsfw_filter"])
+                    choice = input("1 True\n2 False\nChoice: ")
+                    if choice == "1":
+                        cfg["nsfw_filter"] = "True"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                    if choice == "2":
+                        cfg["nsfw_filter"] = "False"
+                        with open("settings.json", "w") as cfg_file:
+                            json.dump(cfg, cfg_file)
+                    else:
+                        print("\nInvalid input. No changes were made.")
+                    print("")
+                # Return to defaults
+                elif option == "6":
                     with open("settings.json", "w") as cfg_file:
                         json.dump(default_cfg, cfg_file)
                     print("Settings were restored to default values.\n")
                 # Go back to main menu
-                elif option == "6":
+                elif option == "7":
                     settings_repeat = False
                 # Invalid input
                 else:
@@ -282,19 +305,47 @@ while full_repeat:
                     i -= 1
                     alt_i -= 1
                 else:
-                    # So the printed urls are in a column
-                    if i < 10:
-                        print(str(alt_i) + ":   " + img_url)
-                    elif 10 <= alt_i < 100:
-                        print(str(alt_i) + ":  " + img_url)
-                    elif 100 <= alt_i < 1000:
-                        print(str(alt_i) + ": " + img_url)
-                    else:
-                        print(str(alt_i) + ":" + img_url)
                     # Saving image from the url
                     img_data = requests.get(img_url).content
                     with open(os.path.join(images_folder_location, str(alt_i) + ".jpg"), "wb") as handler:
                         handler.write(img_data)
+                    if nsfw_filter == "True":
+                        # NSFW content detection
+                        model = predict.load_model("venv/model/nsfw_mobilenet2.224x224.h5")
+                        keys = ["drawings", "neutral", "porn", "hentai", "sexy"]
+                        var = predict.classify(model, images_folder_location + "/" + str(alt_i) + ".jpg")
+                        nsfw_dict = {}
+                        for key in keys:
+                            nsfw_dict[key.format(key)] = str(var.get(images_folder_location + "/" + str(alt_i) +
+                                                                     ".jpg", {}).get(key))
+                        # Checks whether the content is NSFW or not
+                        if float(nsfw_dict["porn"]) >= 0.1 or float(nsfw_dict["hentai"]) >= 0.1\
+                                or float(nsfw_dict["sexy"]) >= 0.1:
+                            os.remove(images_folder_location + "/" + str(alt_i) + ".jpg")
+                            i -= 1
+                            alt_i -= 1
+                        # Prints the results
+                        else:
+                            # So the printed urls are in a column
+                            if i < 10:
+                                print(str(alt_i) + ":   " + img_url)
+                            elif 10 <= alt_i < 100:
+                                print(str(alt_i) + ":  " + img_url)
+                            elif 100 <= alt_i < 1000:
+                                print(str(alt_i) + ": " + img_url)
+                            else:
+                                print(str(alt_i) + ":" + img_url)
+                    else:
+                        # So the printed urls are in a column
+                        if i < 10:
+                            print(str(alt_i) + ":   " + img_url)
+                        elif 10 <= alt_i < 100:
+                            print(str(alt_i) + ":  " + img_url)
+                        elif 100 <= alt_i < 1000:
+                            print(str(alt_i) + ": " + img_url)
+                        else:
+                            print(str(alt_i) + ":" + img_url)
+
                     et = time.time()
                     # Get process runtime and set time.sleep() for the process to be 5sec or longer if necessary
                     ft = et - st
